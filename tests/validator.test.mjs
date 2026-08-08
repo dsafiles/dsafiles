@@ -46,6 +46,8 @@ test("rejects local paths, credentials, and non-project email", () => {
   assert.equal(scanText("events/example.md", `-----BEGIN ${"PRIVATE KEY"}-----`).length, 1);
   assert.equal(scanText("events/example.md", `person${"@"}example.org`).length, 1);
   assert.equal(scanText("events/example.md", `eyJ${"abcdefgh"}.${"abcdefgh"}.${"abcdefgh"}`).length, 1);
+  assert.equal(scanText("events/example.md", `cfat_${"a".repeat(32)}`).length, 1);
+  assert.equal(scanText("events/example.md", "a".repeat(64)).length, 1);
 });
 
 test("extracts and validates Markdown links", () => {
@@ -92,4 +94,25 @@ test("rejects private-style publication metadata and unknown evaluation identiti
     new Set([source.source_id]),
     new Map([[source.source_id, new Set(["finding"])]])
   ).join("\n"), /unknown source_id missing/);
+});
+
+test("rejects private-network evidence URLs and unscoped section expectations", () => {
+  const privateUrl = {
+    ...source,
+    footnotes: { record: { source_type: "primary-record", representation: "external", primary_url: "https://127.0.0.1/record" } }
+  };
+  assert.match(validatePublicationContract({ schema_version: 3, sources: [privateUrl] }, new Map([[source.input_path, dossier]])).errors.join("\n"), /safe HTTPS URL/);
+  const contract = validatePublicationContract({ schema_version: 3, sources: [source] }, new Map([[source.input_path, dossier]]));
+  assert.match(validateEvaluations(
+    `${JSON.stringify({ id: "unscoped", query: "Question", expected_section_ids: ["finding"] })}\n`,
+    `${JSON.stringify({ id: "answer", question: "Question", expected_source_ids: [source.source_id], expected_section_ids: ["finding"] })}\n`,
+    contract.sourceIds,
+    contract.sectionIds
+  ).join("\n"), /section expectations require exactly one expected_source_id/);
+  assert.match(validateEvaluations(
+    `${JSON.stringify({ id: "retrieval", query: "Question", expected_source_ids: [source.source_id], expected_section_ids: ["finding"] })}\n`,
+    `${JSON.stringify({ id: "answer", question: "Question", expected_source_ids: [source.source_id], forbidden_section_ids: ["missing"] })}\n`,
+    contract.sourceIds,
+    contract.sectionIds
+  ).join("\n"), /forbidden sections require exactly one forbidden_source_id/);
 });

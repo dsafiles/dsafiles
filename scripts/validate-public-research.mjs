@@ -1,5 +1,6 @@
 import { lstat, readFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
+import { isIP } from "node:net";
 import { extname, posix, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -47,6 +48,9 @@ const blockedPatterns = [
   { label: "unencrypted web URL", pattern: /http:\/\//i },
   { label: "private key", pattern: /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/ },
   { label: "GitHub token", pattern: /\bgh[pousr]_[A-Za-z0-9]{20,}\b/ },
+  { label: "Cloudflare API token", pattern: /\bcfat_[A-Za-z0-9_-]{20,}\b/ },
+  { label: "credential-shaped 32-byte hex value", pattern: /\b[a-f0-9]{64}\b/i },
+  { label: "credential-shaped 16-byte hex value", pattern: /\b[a-f0-9]{32}\b/i },
   { label: "AWS-style access key", pattern: /\bAKIA[0-9A-Z]{16}\b/ },
   { label: "JWT-shaped value", pattern: /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/ },
   { label: "bearer credential", pattern: /\bBearer\s+[A-Za-z0-9._~+\/-]{16,}/i },
@@ -135,8 +139,10 @@ function validDate(value) {
 function safeHttps(value) {
   try {
     const url = new URL(value);
+    const host = url.hostname.toLowerCase();
     return url.protocol === "https:" && !url.username && !url.password && !url.port
-      && url.hostname.includes(".") && url.hostname !== "localhost";
+      && host.includes(".") && !isIP(host) && host !== "localhost"
+      && !host.endsWith(".localhost") && !host.endsWith(".local") && !host.endsWith(".internal");
   } catch { return false; }
 }
 
@@ -219,6 +225,7 @@ export function validatePublicationContract(manifest, dossiers) {
       if (!footnoteSourceTypes.has(footnote?.source_type)) errors.push(`${footnoteLabel}: invalid source_type`);
       if (footnote?.representation === "external") {
         if (!safeHttps(footnote.primary_url)) errors.push(`${footnoteLabel}: external footnote requires a safe HTTPS URL`);
+        if (typeof footnote.primary_url === "string" && !text.includes(footnote.primary_url)) errors.push(`${footnoteLabel}: primary_url must appear verbatim in the dossier footnote`);
         if (footnote.citation_text !== undefined) errors.push(`${footnoteLabel}: external footnote cannot override citation_text`);
       } else if (footnote?.representation === "citation-only") {
         if (typeof footnote.citation_text !== "string" || !footnote.citation_text.trim() || footnote.primary_url !== undefined) errors.push(`${footnoteLabel}: citation-only footnote requires only reviewed citation_text`);
@@ -249,6 +256,7 @@ export function validateEvaluations(retrievalText, answerText, sourceIds, sectio
   const ids = new Set();
   const positiveRetrieval = new Set();
   const positiveAnswers = new Set();
+  const coveredSections = new Set();
   for (const [kind, cases] of [["retrieval", retrieval.values], ["answer", answers.values]]) {
     for (const item of cases) {
       if (typeof item?.id !== "string" || !item.id) errors.push(`${kind} evaluation: missing id`);
@@ -257,16 +265,27 @@ export function validateEvaluations(retrievalText, answerText, sourceIds, sectio
       if (kind === "retrieval" && (typeof item?.query !== "string" || !item.query.trim())) errors.push(`${item?.id || kind}: missing query`);
       if (kind === "answer" && (typeof item?.question !== "string" || !item.question.trim())) errors.push(`${item?.id || kind}: missing question`);
       for (const sourceId of [...(item?.expected_source_ids || []), ...(item?.forbidden_source_ids || [])]) if (!sourceIds.has(sourceId)) errors.push(`${item?.id || kind}: unknown source_id ${sourceId}`);
-      for (const sourceId of item?.expected_source_ids || []) {
-        for (const sectionId of [...(item?.expected_section_ids || []), ...(item?.expected_any_citation_section_ids || [])]) if (!sectionIds.get(sourceId)?.has(sectionId)) errors.push(`${item?.id || kind}: unknown section_id ${sectionId} for ${sourceId}`);
+      const expectedSources = item?.expected_source_ids || [];
+      const expectedSections = [...new Set([...(item?.expected_section_ids || []), ...(item?.expected_any_citation_section_ids || [])])];
+      const forbiddenSources = item?.forbidden_source_ids || [];
+      const forbiddenSections = item?.forbidden_section_ids || [];
+      if (expectedSections.length && expectedSources.length !== 1) errors.push(`${item?.id || kind}: section expectations require exactly one expected_source_id`);
+      if (forbiddenSections.length && forbiddenSources.length !== 1) errors.push(`${item?.id || kind}: forbidden sections require exactly one forbidden_source_id`);
+      for (const sourceId of expectedSources) {
+        for (const sectionId of expectedSections) {
+          if (!sectionIds.get(sourceId)?.has(sectionId)) errors.push(`${item?.id || kind}: unknown section_id ${sectionId} for ${sourceId}`);
+          else coveredSections.add(`${sourceId}:${sectionId}`);
+        }
         if (kind === "retrieval") positiveRetrieval.add(sourceId);
         if (kind === "answer" && !item.expected_no_answer) positiveAnswers.add(sourceId);
       }
+      for (const sourceId of forbiddenSources) for (const sectionId of forbiddenSections) if (!sectionIds.get(sourceId)?.has(sectionId)) errors.push(`${item?.id || kind}: unknown forbidden section_id ${sectionId} for ${sourceId}`);
     }
   }
   for (const sourceId of sourceIds) {
     if (!positiveRetrieval.has(sourceId)) errors.push(`${sourceId}: requires a positive retrieval evaluation`);
     if (!positiveAnswers.has(sourceId)) errors.push(`${sourceId}: requires a positive answer evaluation`);
+    for (const sectionId of sectionIds.get(sourceId) || []) if (!coveredSections.has(`${sourceId}:${sectionId}`)) errors.push(`${sourceId}:${sectionId}: requires evaluation coverage`);
   }
   return errors;
 }
