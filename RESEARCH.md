@@ -25,6 +25,8 @@ Every commit and pull request in this repository is public. Do not use it for pr
 
 The leading date records when the research file was first created. Keep the filename stable when improving an existing record.
 
+`publication.json` is the machine-readable publication contract. It assigns the stable public route, exact published sections, evidence types, and public-safe footnote identities. `evaluations/` contains the questions that the deployed search and answer system must handle for the published record.
+
 ## Required dossier structure
 
 Each dossier should include:
@@ -62,4 +64,12 @@ Public datasets require a separate review for provenance, field necessity, priva
 - Qualifications, disputes, counterevidence, and gaps remain visible.
 - No local path, credential, account identifier, personal contact detail, or private evidence appears.
 - No downloaded artifact or unreviewed dataset is included.
+- `publication.json` describes every merged dossier exactly once.
+- Retrieval and answer evaluations cover the new or changed record.
 - The change passes the public research validator.
+
+## Publication workflow
+
+Opening a pull request does not publish a record. Merging it into protected `main` does.
+
+After merge, the private website repository automatically pins that exact public commit. Its CI builds the first-party research pages and private search packets from this repository, verifies that the public page is live, evaluates retrieval and generated answers, and promotes the immutable corpus release only after those checks pass. There is no second per-dossier approval list in the private repository.

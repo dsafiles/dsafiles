@@ -1,0 +1,5 @@
+{"id":"founding-when-where","query":"When and where was DSA formed from DSOC and NAM?","expected_source_ids":["dsa-founding-convention"],"expected_section_ids":["executive-summary","convention-and-result"]}
+{"id":"founding-road","query":"What helped DSOC and NAM move toward merger before Detroit?","expected_source_ids":["dsa-founding-convention"],"expected_section_ids":["road-to-detroit"]}
+{"id":"founding-local-process","query":"Did local DSOC and NAM organizations finish unifying at the national convention?","expected_source_ids":["dsa-founding-convention"],"expected_section_ids":["convention-and-result"]}
+{"id":"founding-missing-rollcall","query":"What was the exact final delegate vote tally approving the merger?","expected_source_ids":["dsa-founding-convention"],"expected_section_ids":["unresolved-questions"]}
+{"id":"negative-unrelated-weather","query":"What was the weather in Miami yesterday?","expected_source_ids":[],"forbidden_source_ids":["dsa-founding-convention"]}
