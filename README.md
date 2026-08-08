@@ -10,6 +10,8 @@ This repository is the public research library and the profile home for the proj
 
 The website presents reviewed research as readable pages. Chat citations link to the exact relevant section on the website. Footnotes then link to the original evidence.
 
+`publication.json` and `evaluations/` are part of each reviewed record. When a research pull request passes validation and is merged, the website and private search corpus update automatically from that exact public commit. Contributors only work in this public repository.
+
 ## Contribute
 
 Corrections and contributions are welcome through GitHub issues and pull requests. Read [CONTRIBUTING.md](CONTRIBUTING.md) and [RESEARCH.md](RESEARCH.md) first.

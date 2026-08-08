@@ -1,0 +1,68 @@
+{
+  "$schema": "./publication.schema.json",
+  "schema_version": 3,
+  "sources": [
+    {
+      "source_id": "dsa-founding-convention",
+      "input_path": "events/2026-08-02-DSA-Founding-Convention.md",
+      "title": "DSA Founding Convention",
+      "description": "How the March 20–21, 1982 Detroit unity convention joined DSOC and NAM to form DSA, including the merger process, institutional result, and documented limits of the surviving record.",
+      "canonical_url": "https://dsafiles.com/research/dsa-founding-convention/",
+      "publication_date": "2026-08-04",
+      "source_type": "dossier",
+      "sections": [
+        {
+          "section_id": "executive-summary",
+          "heading_path": ["Executive summary"],
+          "mode": "content",
+          "evidence_types": ["documented-fact", "official-attribution", "qualification"]
+        },
+        {
+          "section_id": "road-to-detroit",
+          "heading_path": ["Road to Detroit"],
+          "mode": "content",
+          "evidence_types": ["documented-fact", "reported-claim", "qualification", "dispute", "uncertainty"]
+        },
+        {
+          "section_id": "convention-and-result",
+          "heading_path": ["Convention and result"],
+          "mode": "content",
+          "evidence_types": ["documented-fact", "official-attribution", "qualification"]
+        },
+        {
+          "section_id": "unresolved-questions",
+          "heading_path": ["Unresolved questions"],
+          "mode": "content",
+          "evidence_types": ["uncertainty"]
+        }
+      ],
+      "footnotes": {
+        "merger-issue": {
+          "source_type": "primary-record",
+          "representation": "external",
+          "primary_url": "https://dlarchive.dsausa.org/wp-content/uploads/2019/01/DL_1982_V010_03_final.pdf"
+        },
+        "dsa-history": {
+          "source_type": "organizational-retrospective",
+          "representation": "external",
+          "primary_url": "https://www.dsausa.org/about-us/history/"
+        },
+        "oral-history": {
+          "source_type": "retrospective-reporting",
+          "representation": "external",
+          "primary_url": "https://dlarchive.dsausa.org/issues/spring-2022/talking-socialism-back-to-the-beginning-dsa-at-40/"
+        },
+        "ehrenreich": {
+          "source_type": "organizational-retrospective",
+          "representation": "external",
+          "primary_url": "https://www.dsausa.org/democratic-left/remembering-barbara-ehrenreich-1941-2022/"
+        },
+        "convention-2023": {
+          "source_type": "primary-record",
+          "representation": "external",
+          "primary_url": "https://docs.google.com/document/d/e/2PACX-1vTEFzaQzwTqBFSevH4iumgVoKV2XSjw_iviS0TZAvUzhI_9182hm5iVxKgmXDC9BwHr7kt0onsi5qGk/pub"
+        }
+      }
+    }
+  ]
+}
